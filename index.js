@@ -51,7 +51,11 @@ function translate(text, opts) {
     }).then(function (url) {
         return got(url).then(function (res) {
             var result = {
-                text: '',
+                to: {
+                    means: [],
+                    text: '',
+                    translit: ''
+                },
                 from: {
                     language: {
                         didYouMean: false,
@@ -61,7 +65,9 @@ function translate(text, opts) {
                         autoCorrected: false,
                         value: '',
                         didYouMean: false
-                    }
+                    },
+                    orig: '',
+                    translit: ''
                 },
                 raw: ''
             };
@@ -73,9 +79,32 @@ function translate(text, opts) {
             var body = safeEval(res.body);
             body[0].forEach(function (obj) {
                 if (obj[0]) {
-                    result.text += obj[0];
+                    result.to.text += obj[0];
+                }
+                if (obj[2]) {
+                    result.to.translit += obj[2];
                 }
             });
+
+            body[0].forEach(function (obj) {
+                if (obj[1]) {
+                    result.from.orig += obj[1];
+                }
+                if (obj[3]) {
+                    result.from.translit += obj[3];
+                }
+            });
+
+            if (body[1]) {
+                body[1].forEach(function (obj) {
+                    var type = obj[0];
+                    var arr = obj[1];
+                    result.to.means.push({
+                        type: type,
+                        means: arr
+                    })
+                })
+            }
 
             if (body[2] === body[8][0][0]) {
                 result.from.language.iso = body[2];
